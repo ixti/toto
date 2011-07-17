@@ -21,7 +21,7 @@ context Toto do
     asserts("content type is set properly") { topic.content_type }.equals "text/html"
     should("include a couple of article")   { topic.body }.includes_elements("#articles li", 3)
     should("include an archive")            { topic.body }.includes_elements("#archives li", 2)
-    should("include couple of tags")        { topic.body }.includes_elements("#tags li", 3)
+    should("include tags cloud")            { topic.body }.includes_elements("#tags-cloud li", 3)
 
     context "with no articles" do
       setup { Rack::MockRequest.new(Toto::Server.new(@config.merge(:ext => 'oxo'))).get('/') }
@@ -60,6 +60,8 @@ context Toto do
     asserts("returns a 200")                { topic.status }.equals 200
     asserts("content type is set properly") { topic.content_type }.equals "text/html"
     should("contain the article")           { topic.body }.includes_html("p" => /<em>Once upon a time<\/em>/)
+    should("contain tags of article")       { topic.body }.includes_elements("#tags span", 2)
+    should("contain tags cloud")            { topic.body }.includes_elements("#tags-cloud li", 3)
   end
 
   context "GET to the archive" do
@@ -127,9 +129,9 @@ context Toto do
                                   Toto::Article.new(:tags => ['wizards']) ])
     end
 
-    asserts("weight depends on amount of tag usage") { topic['wizards'][:weight] > topic['voodoo'][:weight] }
-    asserts("the most heaviest tag has weight of 8") { topic['wizards'][:weight] }.equals 8
-    asserts("the most lightest tag has weight of 0") { topic['voodoo'][:weight] }.equals 0
+    asserts("weight depends on amount of tag usage") { topic['wizards'].weight > topic['voodoo'].weight }
+    asserts("the most heaviest tag has weight of 8") { topic['wizards'].weight }.equals 8
+    asserts("the most lightest tag has weight of 0") { topic['voodoo'].weight }.equals 0
   end
 
   context "Article" do
@@ -148,11 +150,11 @@ context Toto do
     end
   end
 
-  context "GET a tag page" do 
+  context "GET /tags/oz-wizards (tagged aticles)" do 
     setup { @toto.get('/tags/oz-wizards') }
     asserts("returns a 200") { topic.status }.equals 200 
     asserts("body is not empty") { not topic.body.empty? }
-    should("includes only the entries for that tag") { topic.body }.includes_elements("li.entry", 2)
+    should("includes only the entries for that tag") { topic.body }.includes_elements("#tagged-articles > li", 3)
     should("has access to @tag") { topic.body }.includes_html("#tag" => /oz-wizards/)
   end
 
