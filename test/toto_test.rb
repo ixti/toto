@@ -1,4 +1,4 @@
-require 'test/test_helper'
+require 'test_helper'
 require 'date'
 
 URL = "http://toto.oz"
@@ -108,6 +108,11 @@ context Toto do
     asserts("contain the env variable")           { topic.body }.includes_html("p" => /env passed: true/)
     asserts("access the http get parameter")           { topic.body }.includes_html("p" => /request method type: GET/)
     asserts("access the http parameter name value pair")           { topic.body }.includes_html("p" => /request name value pair: param=testparam/)
+  end
+
+  context "GET / (baseurl)" do
+    setup { @toto.get('/')   }
+    asserts("access the http get parameter") { topic.body }.includes_html("p" => %r{baseurl: #{URL}})
   end
 
 
