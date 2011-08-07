@@ -19,6 +19,9 @@ $:.unshift File.dirname(__FILE__)
 require 'ext/ext'
 
 module Toto
+  DRAFT_RE = /^~DRAFT~/
+  DRAFT_ENV = 'development'
+
   Paths = {
     :templates => "templates",
     :pages => "templates/pages",
@@ -75,6 +78,8 @@ module Toto
       articles = type == :html ? self.articles.reverse : self.articles
       {:articles => articles.map do |article|
         Article.new article, @config
+      end.reject do |article|
+        DRAFT_ENV != Toto.env && article.title.match(DRAFT_RE)
       end}.merge archives
     end
 
@@ -90,7 +95,12 @@ module Toto
       end
 
       # load entries
-      entries.reverse!.map! { |filename| Article.new(filename, @config) }
+      entries.reverse!.map!{ |filename| Article.new(filename, @config) }
+
+      # reject draft articles on non-draft environment
+      unless DRAFT_ENV == Toto.env
+        entries.reject!{ |article| article.title.match(DRAFT_RE) }
+      end
 
       # entries: array of artices
       if !(tag = opts.delete(:tag)).nil?
@@ -172,6 +182,10 @@ module Toto
           Article.new(a, @config)
         end
         @tags_cloud = TagCloud.new(@articles, @config)
+
+        if DRAFT_ENV != Toto.env
+          @articles.reject!{ |a| a.title.match(DRAFT_RE) }
+        end
 
         ctx.each do |k, v|
           meta_def(k) { ctx.instance_of?(Hash) ? v : ctx.send(k) }
