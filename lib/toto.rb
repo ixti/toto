@@ -183,7 +183,7 @@ module Toto
         end
         @tags_cloud = TagCloud.new(@articles, @config)
 
-        if DRAFT_ENV != Toto.env
+        unless DRAFT_ENV == Toto.env
           @articles.reject!{ |a| a.title.match(DRAFT_RE) }
         end
 
