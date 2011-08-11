@@ -61,6 +61,14 @@ context Toto do
     should("contain the article")           { topic.body }.includes_html("p" => /<em>Once upon a time<\/em>/)
   end
 
+  context "GET a single article under category" do
+    setup { @toto.get("/cat/dog/2009/04/01/tilt-factor") }
+    asserts("returns a 200")                { topic.status }.equals 200
+    asserts("content type is set properly") { topic.content_type }.equals "text/html"
+    should("contain the article")           { topic.body }.includes_html("p" => /<em>Once upon a time<\/em>/)
+    should("contain category")              { topic.body }.includes_html("div" => /cat\/dog/)
+  end
+
   context "GET to the archive" do
     context "through a year" do
       setup { @toto.get('/2009') }
