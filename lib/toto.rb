@@ -280,6 +280,8 @@ module Toto
     def author()  self[:author] || @config[:author]          end
     def to_html() self.load; super(:article, @config)        end
     alias :to_s to_html
+
+    def category() "not/implemented/yet" end
   end
 
   class Config < Hash
