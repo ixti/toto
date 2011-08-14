@@ -238,7 +238,7 @@ module Toto
         meta, self[:body] = File.read(@obj).split(/\n\n/, 2)
 
         # grab category from filename
-        category = File.dirname(@obj.sub(/^#{Paths[:articles]}/, ''))
+        category = File.dirname(@obj.sub(/^#{Paths[:articles]}/, '')).slice(1..-1)
 
         # use the date from the filename, or else toto won't find the article
         @obj =~ /\/(\d{4}-\d{2}-\d{2})[^\/]*$/
