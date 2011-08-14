@@ -142,7 +142,7 @@ module Toto
     end
 
     def self.articles ext
-      Dir["#{Paths[:articles]}/*.#{ext}"].sort_by {|entry| File.basename(entry) }
+      Dir["#{Paths[:articles]}/**/*.#{ext}"].sort_by {|entry| File.basename(entry) }
     end
 
     class Context
@@ -230,9 +230,12 @@ module Toto
       data = if @obj.is_a? String
         meta, self[:body] = File.read(@obj).split(/\n\n/, 2)
 
+        # grab category from filename
+        category = File.dirname(@obj).sub(/^#{Paths[:articles]}\//, '')
+
         # use the date from the filename, or else toto won't find the article
         @obj =~ /\/(\d{4}-\d{2}-\d{2})[^\/]*$/
-        ($1 ? {:date => $1} : {}).merge(YAML.load(meta))
+        ($1 ? {:date => $1} : {}).merge({:category => category}).merge(YAML.load(meta))
       elsif @obj.is_a? Hash
         @obj
       end.inject({}) {|h, (k,v)| h.merge(k.to_sym => v) }
@@ -272,16 +275,15 @@ module Toto
     end
 
     def path
-      "/#{@config[:prefix]}#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
+      "/#{@config[:prefix]}#{self.category}/#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
     end
 
-    def title()   self[:title] || "an article"               end
-    def date()    @config[:date].call(self[:date])           end
-    def author()  self[:author] || @config[:author]          end
-    def to_html() self.load; super(:article, @config)        end
+    def title()     self[:title] || "an article"            end
+    def date()      @config[:date].call(self[:date])        end
+    def author()    self[:author] || @config[:author]       end
+    def category()  self[:category] || ""                   end
+    def to_html()   self.load; super(:article, @config)     end
     alias :to_s to_html
-
-    def category() "not/implemented/yet" end
   end
 
   class Config < Hash
