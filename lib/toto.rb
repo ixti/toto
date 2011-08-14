@@ -79,20 +79,22 @@ module Toto
     end
 
     def archives opts = {}
-      opts = {:filter => opts} unless opts.is_a?(Hash)
-      entries = self.articles || []
+      opts = {:date => opts} unless opts.is_a?(Hash)
 
       # entries: array of filenames
-      if !(filter = opts[:filter]).nil?
+      entries = self.articles || []
+
+      # filter by date
+      if !(filter = opts.delete(:date)).nil? and filter =~ /^\d{4}/
         entries = entries.select do |filename|
-          filter !~ /^\d{4}/ || File.basename(filename) =~ /^#{filter}/
+          File.basename(filename) =~ /^#{filter}/
         end
       end
 
-      # load entries
+      # entries: array of articles
       entries.reverse!.map!{ |filename| Article.new(filename, @config) }
 
-      # entries: array of artices
+      # filter by tag
       if !(tag = opts.delete(:tag)).nil?
         opts[:tag] = Tag.new(tag, @config)
         entries = entries.select do |article|
@@ -100,11 +102,17 @@ module Toto
         end
       end
 
+      if !(category = opts.delete(:category)).nil?
+        entries = entries.select do |article|
+          !article[:category].nil? && article[:category] =~ /^#{category}/
+        end
+      end
+
       opts.merge({:archives => Archives.new(entries, @config)})
     end
 
-    def article route
-      Article.new("#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}", @config).load
+    def article path
+      Article.new("#{Paths[:articles]}/#{path}.#{self[:ext]}", @config).load
     end
 
     def /
@@ -119,17 +127,14 @@ module Toto
       end
 
       body, status = if Context.new.respond_to?(:"to_#{type}")
-        if route.first =~ /\d{4}/
-          case route.size
-            when 1..3
-              context[archives(route * '-'), :archives]
-            when 4
-              context[article(route), :article]
-            else http 400
-          end
-        elsif route.first.to_sym == :tag
-          if 2 == route.size then context[archives(:tag => route.last), :tag]
-          else http 400; end
+        if path =~ /^(.+?\/)?(\d{4}\/\d{2}\/\d{2}\/[^\/]+)$/
+          context[article("#{$1}#{$2.tr('/', '-')}"), :article]
+        elsif 4 > route.size and route.first =~ /\d{4}/
+          context[archives(:date => route * '-'), :archives]
+        elsif 1 < route.size and route.first == 'category'
+          context[archives(:category => route.slice(1..-1) * '/'), :archives]
+        elsif 2 == route.size and route.first == 'tag'
+          context[archives(:tag => route.last), :tag]
         elsif respond_to?(path)
           context[send(path, type), path.to_sym]
         elsif (repo = @config[:github][:repos].grep(/#{path}/).first) &&
@@ -159,7 +164,7 @@ module Toto
     end
 
     def self.articles ext
-      Dir["#{Paths[:articles]}/*.#{ext}"].sort_by {|entry| File.basename(entry) }
+      Dir["#{Paths[:articles]}/**/*.#{ext}"].sort_by {|entry| File.basename(entry) }
     end
 
     class Context
@@ -248,9 +253,12 @@ module Toto
       data = if @obj.is_a? String
         meta, self[:body] = File.read(@obj).split(/\n\n/, 2)
 
+        # grab category from filename
+        category = File.dirname(@obj).sub(/^#{Paths[:articles]}\//, '')
+
         # use the date from the filename, or else toto won't find the article
         @obj =~ /\/(\d{4}-\d{2}-\d{2})[^\/]*$/
-        ($1 ? {:date => $1} : {}).merge(YAML.load(meta))
+        ($1 ? {:date => $1} : {}).merge({:category => category}).merge(YAML.load(meta))
       elsif @obj.is_a? Hash
         @obj
       end.inject({}) {|h, (k,v)| h.merge(k.to_sym => v) }
@@ -304,17 +312,15 @@ module Toto
     end
 
     def path
-      "/#{@config[:prefix]}#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
+      "/#{@config[:prefix]}#{self.category}/#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
     end
 
-    def tags
-      self[:tags]
-    end
-
-    def title()   self[:title] || "an article"               end
-    def date()    @config[:date].call(self[:date])           end
-    def author()  self[:author] || @config[:author]          end
-    def to_html() self.load; super(:article, @config)        end
+    def title()     self[:title] || "an article"            end
+    def date()      @config[:date].call(self[:date])        end
+    def author()    self[:author] || @config[:author]       end
+    def tags()      self[:tags]                             end
+    def category()  self[:category]                         end
+    def to_html()   self.load; super(:article, @config)     end
     alias :to_s to_html
   end
 

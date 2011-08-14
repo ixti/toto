@@ -64,6 +64,14 @@ context Toto do
     should("contain tags cloud")            { topic.body }.includes_elements("#tags-cloud li", 3)
   end
 
+  context "GET a single article under category" do
+    setup { @toto.get("/cat/dog/2009/04/01/tilt-factor") }
+    asserts("returns a 200")                { topic.status }.equals 200
+    asserts("content type is set properly") { topic.content_type }.equals "text/html"
+    should("contain the article")           { topic.body }.includes_html("p" => /Once upon a time/)
+    should("contain category")              { topic.body }.includes_html("div" => /cat\/dog/)
+  end
+
   context "GET to the archive" do
     context "through a year" do
       setup { @toto.get('/2009') }
@@ -76,6 +84,18 @@ context Toto do
       asserts("returns a 200")                      { topic.status }.equals 200
       should("includes the entries for that month") { topic.body }.includes_elements("li.entry", 2)
       should("includes the year & month")           { topic.body }.includes_html("h1" => /2009\/12/)
+    end
+
+    context "through a category (with subcategories)" do
+      setup { @toto.get('/category/cat') }
+      asserts("returns a 200")                     { topic.status }.equals 200
+      should("includes the entries of category with descendants") { topic.body }.includes_elements("li.entry", 2)
+    end
+
+    context "through a category (without subcategories)" do
+      setup { @toto.get('/category/cat/dog') }
+      asserts("returns a 200")                     { topic.status }.equals 200
+      should("includes the entries of this category only") { topic.body }.includes_elements("li.entry", 1)
     end
 
     context "through /archive" do
