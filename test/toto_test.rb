@@ -65,7 +65,7 @@ context Toto do
     setup { @toto.get("/cat/dog/2009/04/01/tilt-factor") }
     asserts("returns a 200")                { topic.status }.equals 200
     asserts("content type is set properly") { topic.content_type }.equals "text/html"
-    should("contain the article")           { topic.body }.includes_html("p" => /<em>Once upon a time<\/em>/)
+    should("contain the article")           { topic.body }.includes_html("p" => /Once upon a time/)
     should("contain category")              { topic.body }.includes_html("div" => /cat\/dog/)
   end
 
