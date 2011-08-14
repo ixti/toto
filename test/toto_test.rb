@@ -133,6 +133,20 @@ context Toto do
     asserts("access the http parameter name value pair")           { topic.body }.includes_html("p" => /request name value pair: param=testparam/)
   end
 
+  context "Article" do
+    context "without category" do
+      setup { Toto::Article.new "#{Toto::Paths[:articles]}/1900-05-17-the-wonderful-wizard-of-oz.txt", @config }
+      asserts("has category property") { not topic[:category].nil? }
+      should("have empty category") { topic.category }.empty
+    end
+
+    context "with category" do
+      setup { Toto::Article.new "#{Toto::Paths[:articles]}/cat/dog/2009-04-01-tilt-factor.txt", @config }
+      asserts("has category property") { !topic[:category].nil? }
+      should("have non-empty category") { topic.category }.equals "cat/dog"
+    end
+  end
+
 
 
   context "TagCloud nubes" do
@@ -233,6 +247,7 @@ context Toto do
       should("have an author")             { topic.author }.equals AUTHOR
       should("have a path")                { topic.path }.equals Date.today.strftime("/%Y/%m/%d/toto-and-the-wizard-of-oz/")
       should("have a url")                 { topic.url }.equals Date.today.strftime("#{URL}/%Y/%m/%d/toto-and-the-wizard-of-oz/")
+      should("have no category")           { topic.category.nil? }
     end
 
     context "with a user-defined summary" do
@@ -250,17 +265,20 @@ context Toto do
     context "with everything specified" do
       setup do
         Toto::Article.new({
-          :title  => "The Wizard of Oz",
-          :body   => ("a little bit of text." * 5) + "\n" + "filler" * 10,
-          :date   => "19/10/1976",
-          :slug   => "wizard-of-oz",
-          :author => "toetoe"
+          :title    => "The Wizard of Oz",
+          :body     => ("a little bit of text." * 5) + "\n" + "filler" * 10,
+          :date     => "19/10/1976",
+          :slug     => "wizard-of-oz",
+          :author   => "toetoe",
+          :category => "foo/bar"
         }, @config)
       end
 
       should("parse the date") { [topic[:date].month, topic[:date].year] }.equals [10, 1976]
       should("use the slug")   { topic.slug }.equals "wizard-of-oz"
       should("use the author") { topic.author }.equals "toetoe"
+      should("have a path")    { topic.path }.equals "/foo/bar/1976/10/19/wizard-of-oz/"
+      should("have a url")     { topic.url }.equals "#{URL}/foo/bar/1976/10/19/wizard-of-oz/"
 
       context "and long first paragraph" do
         should("create a valid summary") { topic.summary }.equals "<p>" + ("a little bit of text." * 5).chop + "&hellip;</p>\n"
