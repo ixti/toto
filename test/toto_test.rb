@@ -133,20 +133,6 @@ context Toto do
     asserts("access the http parameter name value pair")           { topic.body }.includes_html("p" => /request name value pair: param=testparam/)
   end
 
-  context "Article" do
-    context "without category" do
-      setup { Toto::Article.new "#{Toto::Paths[:articles]}/1900-05-17-the-wonderful-wizard-of-oz.txt", @config }
-      asserts("has category property") { not topic[:category].nil? }
-      should("have empty category") { topic.category }.empty
-    end
-
-    context "with category" do
-      setup { Toto::Article.new "#{Toto::Paths[:articles]}/cat/dog/2009-04-01-tilt-factor.txt", @config }
-      asserts("has category property") { !topic[:category].nil? }
-      should("have non-empty category") { topic.category }.equals "cat/dog"
-    end
-  end
-
 
 
   context "TagCloud nubes" do
@@ -174,6 +160,7 @@ context Toto do
     end
   end
 
+
   context "Article" do
     context "without tags" do
       setup { Toto::Article.new({ :body => "" }, @config) }
@@ -187,6 +174,18 @@ context Toto do
       asserts("has tags property") { !topic[:tags].nil? }
       asserts("which is an array") { topic[:tags].is_a? Array }
       should("have elements") { topic.tags.length }.equals 2
+    end
+
+    context "without category" do
+      setup { Toto::Article.new "#{Toto::Paths[:articles]}/1900-05-17-the-wonderful-wizard-of-oz.txt", @config }
+      asserts("has category property") { not topic[:category].nil? }
+      should("have empty category") { topic.category }.empty
+    end
+
+    context "with category" do
+      setup { Toto::Article.new "#{Toto::Paths[:articles]}/cat/dog/2009-04-01-tilt-factor.txt", @config }
+      asserts("has category property") { !topic[:category].nil? }
+      should("have non-empty category") { topic.category }.equals "cat/dog"
     end
   end
 
