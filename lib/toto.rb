@@ -416,7 +416,7 @@ module Toto
     alias :permalink url
 
     def path
-      "/tag/#{@slug}"
+      "/#{@config[:prefix]}tag/#{@slug}"
     end
 
     def self.slugize obj
