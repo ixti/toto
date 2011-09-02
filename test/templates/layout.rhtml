@@ -1,4 +1,5 @@
 <html>
+  <title><%= page_title.reverse.push('toto').join(' ~ ') %></title>
   <%= yield %>
   <ul id="tags-cloud">
     <% for tag in tags_cloud %>

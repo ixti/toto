@@ -201,6 +201,13 @@ module Toto
       def method_missing m, *args, &blk
         @context.respond_to?(m) ? @context.send(m, *args, &blk) : super
       end
+
+      def page_title! str
+      end
+
+      def page_title
+        []
+      end
     end
   end
 
