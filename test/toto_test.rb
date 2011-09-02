@@ -133,6 +133,12 @@ context Toto do
     asserts("access the http parameter name value pair")           { topic.body }.includes_html("p" => /request name value pair: param=testparam/)
   end
 
+  context "When page_title is used" do
+    setup { @toto.get('/foobar') }
+    asserts("page_title returns array of appended strings") { topic.body }.includes_html("title" => /^Foobar ~ toto$/)
+    asserts("page_title! returns given string back")        { topic.body }.includes_html("h1" => /^Foobar$/)
+  end
+
 
 
   context "TagCloud nubes" do
