@@ -172,7 +172,7 @@ module Toto
       attr_reader :env, :tags_cloud
 
       def initialize ctx = {}, config = {}, path = "/", env = {}
-        @config, @context, @path, @env = config, ctx, path, env
+        @config, @context, @path, @env, @page_title = config, ctx, path, env, []
         @articles = Site.articles(@config[:ext]).reverse.map do |a|
           Article.new(a, @config)
         end
@@ -203,10 +203,12 @@ module Toto
       end
 
       def page_title! str
+        @page_title << str
+        str
       end
 
       def page_title
-        []
+        @page_title.dup
       end
     end
   end
