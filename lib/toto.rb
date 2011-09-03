@@ -103,6 +103,7 @@ module Toto
       end
 
       if !(category = opts.delete(:category)).nil?
+        opts[:category] = category
         entries = entries.select do |article|
           !article[:category].nil? && article[:category] =~ /^#{category}/
         end
@@ -131,8 +132,9 @@ module Toto
           context[article("#{$1}#{$2.tr('/', '-')}"), :article]
         elsif 4 > route.size and route.first =~ /\d{4}/
           context[archives(:date => route * '-'), :archives]
-        elsif 1 < route.size and route.first == 'category'
-          context[archives(:category => route.slice(1..-1) * '/'), :archives]
+        elsif route.first == 'category'
+          if 1 < route.size then context[archives(:category => route.slice(1..-1) * '/'), :category]
+          else http 400 end
         elsif route.first == 'tag'
           if 2 == route.size then context[archives(:tag => route.last), :tag]
           else http 400 end

@@ -86,6 +86,17 @@ context Toto do
       should("includes the year & month")           { topic.body }.includes_html("h1" => /2009\/12/)
     end
 
+    context "through /archive" do
+      setup { @toto.get('/archive') }
+    end
+  end
+
+  context "GET category archive" do
+    context "without category specified" do
+      setup { @toto.get('/category/') }
+      asserts("returns a 400")                     { topic.status }.equals 400
+    end
+
     context "through a category (with subcategories)" do
       setup { @toto.get('/category/cat') }
       asserts("returns a 200")                     { topic.status }.equals 200
@@ -96,10 +107,6 @@ context Toto do
       setup { @toto.get('/category/cat/dog') }
       asserts("returns a 200")                     { topic.status }.equals 200
       should("includes the entries of this category only") { topic.body }.includes_elements("li.entry", 1)
-    end
-
-    context "through /archive" do
-      setup { @toto.get('/archive') }
     end
   end
 
